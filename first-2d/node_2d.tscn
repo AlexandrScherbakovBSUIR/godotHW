@@ -1,0 +1,92 @@
+[gd_scene load_steps=4 format=3 uid="uid://bgj3ou1qwukdi"]
+
+[ext_resource type="Script" uid="uid://d1oawygqkax15" path="res://custom_signal.gd" id="1_0hol4"]
+[ext_resource type="Texture2D" uid="uid://7vmdp60yiw87" path="res://icon.svg" id="1_epypp"]
+[ext_resource type="Script" uid="uid://4mnweb0s1klh" path="res://sprite_2d.gd" id="4_0hol4"]
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_0hol4")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+z_index = 1
+position = Vector2(1375.9999, 560)
+scale = Vector2(0.48408535, 0.46875)
+texture = ExtResource("1_epypp")
+script = ExtResource("4_0hol4")
+
+[node name="Timer" type="Timer" parent="Sprite2D"]
+wait_time = 0.657
+autostart = true
+
+[node name="Panel" type="Panel" parent="."]
+offset_left = 1472.0
+offset_right = 1920.0
+offset_bottom = 1080.0
+
+[node name="Button2" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 200.0
+offset_bottom = 72.0
+text = "2"
+
+[node name="Button3" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 248.0
+offset_top = 8.0
+offset_right = 440.0
+offset_bottom = 72.0
+text = "new window"
+
+[node name="Button4" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 48.0
+offset_top = 88.0
+offset_right = 368.0
+offset_bottom = 216.0
+text = "Toggle motion"
+
+[node name="Button" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 144.0
+offset_top = 296.0
+offset_right = 304.0
+offset_bottom = 392.0
+text = "Toggle motion"
+
+[node name="Polygon2D2" type="Polygon2D" parent="."]
+position = Vector2(264, 464)
+polygon = PackedVector2Array(544.8264, -24, 416, 176, 544, 368, 736, 368, 864, 176, 736, -24)
+
+[node name="Polygon2D3" type="Polygon2D" parent="."]
+position = Vector2(-400, 48)
+polygon = PackedVector2Array(544.8264, -24, 416, 176, 544, 368, 736, 368, 864, 176, 736, -24)
+
+[node name="Polygon2D4" type="Polygon2D" parent="."]
+position = Vector2(264, 56)
+polygon = PackedVector2Array(544.8264, -24, 416, 176, 544, 368, 736, 368, 864, 176, 736, -24)
+
+[node name="Polygon2D5" type="Polygon2D" parent="."]
+position = Vector2(600, 256)
+polygon = PackedVector2Array(544.8264, -24, 416, 176, 544, 368, 736, 368, 864, 176, 736, -24)
+
+[node name="Polygon2D6" type="Polygon2D" parent="."]
+position = Vector2(600, 664)
+polygon = PackedVector2Array(544.8264, -24, 416, 176, 544, 368, 736, 368, 864, 176, 736, -24)
+
+[node name="Polygon2D7" type="Polygon2D" parent="."]
+position = Vector2(-408, 456)
+polygon = PackedVector2Array(544.8264, -24, 416, 176, 544, 368, 736, 368, 864, 176, 736, -24)
+
+[node name="Polygon2D8" type="Polygon2D" parent="."]
+position = Vector2(-80, 664)
+polygon = PackedVector2Array(544.8264, -24, 416, 176, 544, 368, 736, 368, 864, 176, 736, -24)
+
+[node name="Polygon2D9" type="Polygon2D" parent="."]
+position = Vector2(-72, 256)
+polygon = PackedVector2Array(544.8264, -24, 416, 176, 544, 368, 736, 368, 864, 176, 736, -24)
+
+[connection signal="pressed" from="Panel/Button2" to="Sprite2D" method="_on_button_2_pressed"]
+[connection signal="pressed" from="Panel/Button3" to="." method="_on_button_3_pressed"]
+[connection signal="pressed" from="Panel/Button" to="Sprite2D" method="_on_button_pressed"]

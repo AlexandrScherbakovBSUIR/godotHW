@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AIAssistantResource" load_steps=4 format=3 uid="uid://c6ntvbb6xfkdp"]
+
+[ext_resource type="Resource" uid="uid://c0xq2vafep0gu" path="res://addons/ai_assistant_hub/llm_providers/ollama.tres" id="1_46mpm"]
+[ext_resource type="Script" uid="uid://x1tjbsbd0j3m" path="res://addons/ai_assistant_hub/quick_prompts/ai_quick_prompt_resource.gd" id="2_5kgq4"]
+[ext_resource type="Script" uid="uid://dli8fnklemba7" path="res://addons/ai_assistant_hub/assistants/ai_assistant_resource.gd" id="3_b1mga"]
+
+[resource]
+script = ExtResource("3_b1mga")
+type_name = "GODOT assistant"
+ai_model = "qwen2.5-coder:latest"
+llm_provider = ExtResource("1_46mpm")

@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3 uid="uid://bkml3uf0mge1s"]
+
+[ext_resource type="Script" uid="uid://cgdng3c616ftr" path="res://area_2d.gd" id="1_bt7cu"]
+
+[node name="Hexagon" type="Area2D"]
+script = ExtResource("1_bt7cu")
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(16, 16, 112, -8, 120, 112, -8, 120, -8, -8)
+
+[node name="Polygon2D" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(256, 64, 384, 64, 384, 192, 256, 192)
+
+[connection signal="input_event" from="." to="." method="_on_Hexagon_input_event"]
+[connection signal="mouse_entered" from="." to="." method="_on_Hexagon_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_Hexagon_mouse_exited"]

@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://cp7t2l4s8g5i6"]
+
+[ext_resource type="Script" uid="uid://dlrcq22k2sp4o" path="res://polygon_generation.gd" id="1_iae4h"]
+[ext_resource type="PackedScene" uid="uid://bkml3uf0mge1s" path="res://hexagon.tscn" id="2_cjcvq"]
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("1_iae4h")
+
+[node name="Hexagon" parent="." instance=ExtResource("2_cjcvq")]
