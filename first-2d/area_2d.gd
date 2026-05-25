@@ -12,7 +12,7 @@ var neighbour_3 = Vector2(0,0) #right bottom
 var neighbour_4 = Vector2(0,0) #bottom
 var neighbour_5 = Vector2(0,0) #left bottom
 var neighbour_6 = Vector2(0,0) #left top
-var is_payer_step_on : bool = false
+var is_player_step_on : bool = false
 var value : int = randi() % 5
 var is_on_player_pass : bool = false
 var is_rock : bool = false
@@ -43,13 +43,13 @@ func _on_Hexagon_input_event(_viewport, event, _shape_idx):
 	if event is InputEventMouseButton and event.pressed:
 		#_poly.color = Color("BLUE")
 		if is_on_player_pass:
-			is_payer_step_on = true
+			is_player_step_on = true
 			region_selected.emit()
 		
 func _process(delta: float) -> void:
-	if is_payer_step_on:
+	if is_player_step_on:
 		_poly.color = Color("BLACK")
-	if !is_payer_step_on:
+	if !is_player_step_on:
 		_poly.color = Color("DARK_KHAKI")
 	if is_on_player_pass:
 		_poly.color.a = 0.3
@@ -60,7 +60,7 @@ func _process(delta: float) -> void:
 			_poly.color.a = 1
 		
 	
-func set_neibghours(start_point : Vector2) ->void:
+func set_neighbours(start_point : Vector2) ->void:
 	if start_point[1]-70 >= 50:
 		neighbour_1 = Vector2(start_point[0],start_point[1]-70)
 	if start_point[0] + 60 <= 1310  && start_point[1] - 35 >= 50:
