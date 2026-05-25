@@ -61,18 +61,20 @@ func _process(delta: float) -> void:
 		
 	
 func set_neighbours(start_point : Vector2) ->void:
-	if start_point[1]-70 >= 50:
-		neighbour_1 = Vector2(start_point[0],start_point[1]-70)
-	if start_point[0] + 60 <= 1310  && start_point[1] - 35 >= 50:
-		neighbour_2 = Vector2(start_point[0] + 60,start_point[1]-35)
-	if start_point[0] + 60 <= 1310 && start_point[1] + 35 <= 925:
-		neighbour_3 = Vector2(start_point[0] + 60 ,start_point[1]+35)
-	if start_point[1] + 70 <= 925:
-		neighbour_4 = Vector2(start_point[0] ,start_point[1] + 70)
-	if start_point[0] - 60 >= 50 && start_point[1] + 35 <= 925:
-		neighbour_5 = Vector2(start_point[0] - 60,start_point[1] + 35)
-	if start_point[0] - 60 >= 50 && start_point[1] - 35 >= 50:
-		neighbour_6 = Vector2(start_point[0] - 60,start_point[1]-35)
+	var screen_size = get_viewport_rect().size
+	var m = 50
+	if start_point.y - 70 >= m:
+		neighbour_1 = Vector2(start_point.x, start_point.y - 70)
+	if start_point.x + 60 <= screen_size.x - m && start_point.y - 35 >= m:
+		neighbour_2 = Vector2(start_point.x + 60, start_point.y - 35)
+	if start_point.x + 60 <= screen_size.x - m && start_point.y + 35 <= screen_size.y - m:
+		neighbour_3 = Vector2(start_point.x + 60, start_point.y + 35)
+	if start_point.y + 70 <= screen_size.y - m:
+		neighbour_4 = Vector2(start_point.x, start_point.y + 70)
+	if start_point.x - 60 >= m && start_point.y + 35 <= screen_size.y - m:
+		neighbour_5 = Vector2(start_point.x - 60, start_point.y + 35)
+	if start_point.x - 60 >= m && start_point.y - 35 >= m:
+		neighbour_6 = Vector2(start_point.x - 60, start_point.y - 35)
 
 	#neighbour_1 = Vector2(start_point[0],start_point[1]-65)
 	#neighbour_2 = Vector2(start_point[0] + 55,start_point[1]-30)

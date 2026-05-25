@@ -8,25 +8,20 @@ var movement_speed : int = 3
 var path_hexagon_counter : int = 0
 var player_start_pos :int = 10
 
+var margin := 50
 var checked_vectors : PackedVector2Array
-func _init() -> void:
-	print("init")
-	for x in range(50,1300,120): # TODO: make variables not hardcode and use matrix - not a just array 
-		for y in range(50,900,70):
+
+func _ready() -> void:
+	print("ready")
+	var screen_size = get_viewport_rect().size
+	for x in range(margin, screen_size.x - margin, 120):
+		for y in range(margin, screen_size.y - margin, 70):
 			var point = Vector2(x, y)
 			hexagon_start_points_array.append(point)
 			var point2 = Vector2(x + 60, y + 35)
 			hexagon_start_points_array.append(point2)
-	#print("points array size: ", hexagon_start_points_array.size())
-	#print("points array_______________________________________________________________: "
-	#, hexagon_start_points_array)
-	
 	hexagon_start_points_array.sort()
-	print("points array____________________after sort___________________________________________: "
-	, hexagon_start_points_array)
-	
-func _ready() -> void:
-	print("ready")
+	print("points array:", hexagon_start_points_array)
 	for point in hexagon_start_points_array:
 		hexagon_array.append(create_hexagon(point))  
 	var start_hex : Hexagon = hexagon_array.get(10)
