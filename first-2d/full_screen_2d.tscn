@@ -1,79 +1,212 @@
-[gd_scene load_steps=3 format=3 uid="uid://273rkwixps3u"]
+[gd_scene load_steps=4 format=3 uid="uid://273rkwixps3u"]
 
 [ext_resource type="PackedScene" uid="uid://cp7t2l4s8g5i6" path="res://polygon_area.tscn" id="1_x786n"]
 [ext_resource type="Texture2D" uid="uid://7vmdp60yiw87" path="res://icon.svg" id="2_evrx2"]
+[ext_resource type="Script" path="res://root.gd" id="3_sxlnw"]
 
 [node name="Node2D" type="Node2D"]
+script = ExtResource("3_sxlnw")
 
-[node name="Node2D" parent="." instance=ExtResource("1_x786n")]
-position = Vector2(0, 50)
+[node name="MapArea" parent="." instance=ExtResource("1_x786n")]
+position = Vector2(0, 48)
 
-[node name="MenuButton" type="MenuButton" parent="."]
-offset_right = 192.0
+[node name="MenuBar" type="Panel" parent="."]
+offset_right = 1920.0
 offset_bottom = 48.0
-theme_type_variation = &"FlatMenuButton"
-theme_override_colors/font_color = Color(1.92523e-07, 0.6844887, 0.8693965, 1)
-theme_override_colors/font_focus_color = Color(0.97429687, 0.6509297, 0.52328867, 1)
-theme_override_colors/font_pressed_color = Color(0.12246662, 0.5727944, 0.9379804, 1)
-theme_override_colors/font_hover_color = Color(0.84476507, 0.27569905, 0.78392, 1)
-theme_override_colors/font_hover_pressed_color = Color(0.062296055, 0.6073661, 0.72006017, 1)
-theme_override_colors/font_disabled_color = Color(0.55419606, 0.4592778, 0.5415748, 0.3019608)
-theme_override_colors/font_outline_color = Color(0.6557642, 0.38986793, 0.98057383, 1)
-theme_override_colors/icon_normal_color = Color(0.18071377, 0.44949967, 0.91816014, 1)
-theme_override_colors/icon_focus_color = Color(0.34710762, 0.45924366, 0.9231967, 1)
-theme_override_colors/icon_pressed_color = Color(0.25093266, 0.7458934, 0.6178341, 1)
-theme_override_colors/icon_hover_color = Color(0.713025, 0.49727052, 0.4290213, 1)
-theme_override_colors/icon_hover_pressed_color = Color(0.36953557, 0.4611289, 0.6981985, 1)
-theme_override_colors/icon_disabled_color = Color(0.6358851, 0.5093786, 0.33680004, 0.4)
-button_pressed = true
-text = "Menu"
+color = Color(0.15, 0.15, 0.15, 1)
+
+[node name="MenuButton" type="MenuButton" parent="MenuBar"]
+offset_right = 200.0
+offset_bottom = 48.0
+text = "Game"
 item_count = 3
-popup/item_0/text = "item_1"
-popup/item_0/icon = ExtResource("2_evrx2")
+popup/item_0/text = "New Game"
 popup/item_0/id = 1
-popup/item_1/text = "item_2"
-popup/item_1/checkable = 1
+popup/item_1/text = "Settings"
 popup/item_1/id = 2
-popup/item_2/text = "item_3"
-popup/item_2/checkable = 2
+popup/item_2/text = "About"
 popup/item_2/id = 3
 
-[node name="GridContainer" type="GridContainer" parent="."]
-custom_minimum_size = Vector2(50, 50)
-offset_left = 1472.0
+[node name="SidePanel" type="Panel" parent="."]
+offset_left = 1600.0
 offset_right = 1920.0
+offset_top = 48.0
 offset_bottom = 1080.0
-columns = 2
+color = Color(0.12, 0.12, 0.12, 1)
 
-[node name="Button" type="Button" parent="GridContainer"]
+[node name="VBox" type="VBoxContainer" parent="SidePanel"]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 312.0
+offset_bottom = 1024.0
+
+[node name="CharacterIcon" type="TextureRect" parent="SidePanel/VBox"]
+custom_minimum_size = Vector2(64, 64)
+size_flags_horizontal = 0
+stretch_mode = 5
+texture = ExtResource("2_evrx2")
+
+[node name="StatsLabel" type="Label" parent="SidePanel/VBox"]
+size_flags_horizontal = 0
+text = "Score: 0
+Speed: 2
+Vision: 3
+Attack: 2
+Defense: 3
+Dice: 1"
+
+[node name="CardsLabel" type="Label" parent="SidePanel/VBox"]
+size_flags_horizontal = 0
+text = "Cards"
+theme_override_font_sizes/font_size = 14
+
+[node name="VBoxCards" type="GridContainer" parent="SidePanel/VBox"]
+size_flags_horizontal = 0
+size_flags_vertical = 0
+columns = 3
+
+[node name="CardSlot1" type="Panel" parent="SidePanel/VBox/VBoxCards"]
+custom_minimum_size = Vector2(40, 56)
+size_flags_horizontal = 4
+mouse_filter = 0
+
+[node name="Label" type="Label" parent="SidePanel/VBox/VBoxCards/CardSlot1"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 14
+text = "1"
+
+[node name="CardSlot2" type="Panel" parent="SidePanel/VBox/VBoxCards"]
+custom_minimum_size = Vector2(40, 56)
+size_flags_horizontal = 4
+mouse_filter = 0
+
+[node name="Label" type="Label" parent="SidePanel/VBox/VBoxCards/CardSlot2"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 14
+text = "2"
+
+[node name="CardSlot3" type="Panel" parent="SidePanel/VBox/VBoxCards"]
+custom_minimum_size = Vector2(40, 56)
+size_flags_horizontal = 4
+mouse_filter = 0
+
+[node name="Label" type="Label" parent="SidePanel/VBox/VBoxCards/CardSlot3"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 14
+text = "3"
+
+[node name="CardSlot4" type="Panel" parent="SidePanel/VBox/VBoxCards"]
+custom_minimum_size = Vector2(40, 56)
+size_flags_horizontal = 4
+mouse_filter = 0
+
+[node name="Label" type="Label" parent="SidePanel/VBox/VBoxCards/CardSlot4"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 14
+text = "4"
+
+[node name="CardSlot5" type="Panel" parent="SidePanel/VBox/VBoxCards"]
+custom_minimum_size = Vector2(40, 56)
+size_flags_horizontal = 4
+mouse_filter = 0
+
+[node name="Label" type="Label" parent="SidePanel/VBox/VBoxCards/CardSlot5"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 14
+text = "5"
+
+[node name="CardSlot6" type="Panel" parent="SidePanel/VBox/VBoxCards"]
+custom_minimum_size = Vector2(40, 56)
+size_flags_horizontal = 4
+mouse_filter = 0
+
+[node name="Label" type="Label" parent="SidePanel/VBox/VBoxCards/CardSlot6"]
+layout_mode = 1
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 14
+text = "6"
+
+[node name="GridContainer" type="GridContainer" parent="SidePanel/VBox"]
+columns = 2
+size_flags_vertical = 3
+
+[node name="Button" type="Button" parent="SidePanel/VBox/GridContainer"]
 layout_mode = 2
 text = "1"
 
-[node name="LineEdit" type="LineEdit" parent="GridContainer"]
+[node name="LineEdit" type="LineEdit" parent="SidePanel/VBox/GridContainer"]
 layout_mode = 2
 
-[node name="Button2" type="Button" parent="GridContainer"]
+[node name="Button2" type="Button" parent="SidePanel/VBox/GridContainer"]
 layout_mode = 2
 text = "2"
 
-[node name="Button3" type="Button" parent="GridContainer"]
+[node name="Button3" type="Button" parent="SidePanel/VBox/GridContainer"]
 layout_mode = 2
 text = "3"
 
-[node name="Button4" type="Button" parent="GridContainer"]
+[node name="Button4" type="Button" parent="SidePanel/VBox/GridContainer"]
 layout_mode = 2
 text = "4"
 
-[node name="Button5" type="Button" parent="GridContainer"]
+[node name="Button5" type="Button" parent="SidePanel/VBox/GridContainer"]
 layout_mode = 2
 text = "5"
 
-[node name="Button6" type="Button" parent="GridContainer"]
+[node name="Button6" type="Button" parent="SidePanel/VBox/GridContainer"]
 layout_mode = 2
 text = "6"
 
-[node name="Button7" type="Button" parent="GridContainer"]
+[node name="Button7" type="Button" parent="SidePanel/VBox/GridContainer"]
 layout_mode = 2
 text = "7"
 
-[connection signal="pressed" from="GridContainer/Button" to="Node2D" method="_on_button_pressed_1"]
+[connection signal="pressed" from="SidePanel/VBox/GridContainer/Button" to="." method="_on_button_pressed_1"]
+[connection signal="id_pressed" from="MenuBar/MenuButton" to="." method="_on_menu_id_pressed"]
+[connection signal="gui_input" from="SidePanel/VBox/VBoxCards/CardSlot1" to="." method="_on_card_slot_gui_input" binds="[0]"]
+[connection signal="gui_input" from="SidePanel/VBox/VBoxCards/CardSlot2" to="." method="_on_card_slot_gui_input" binds="[1]"]
+[connection signal="gui_input" from="SidePanel/VBox/VBoxCards/CardSlot3" to="." method="_on_card_slot_gui_input" binds="[2]"]
+[connection signal="gui_input" from="SidePanel/VBox/VBoxCards/CardSlot4" to="." method="_on_card_slot_gui_input" binds="[3]"]
+[connection signal="gui_input" from="SidePanel/VBox/VBoxCards/CardSlot5" to="." method="_on_card_slot_gui_input" binds="[4]"]
+[connection signal="gui_input" from="SidePanel/VBox/VBoxCards/CardSlot6" to="." method="_on_card_slot_gui_input" binds="[5]"]
