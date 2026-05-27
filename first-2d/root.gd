@@ -20,10 +20,15 @@ extends Node2D
 ]
 
 func _ready() -> void:
+	map_area.dice_target = $SidePanel/VBox/CharacterIcon
 	map_area.stats_changed.connect(update_stats_display)
 	map_area.cards_changed.connect(update_cards_ui)
+	map_area.poi_success.connect(_on_poi_success)
+	map_area.poi_fail.connect(_on_poi_fail)
+	$MenuBar/MenuButton.get_popup().id_pressed.connect(_on_menu_id_pressed)
 	update_stats_display()
 	update_cards_ui()
+	_show_character_select()
 
 func update_stats_display() -> void:
 	stats_label.text = "Score: %d\nSpeed: %d\nVision: %d\nAttack: %d\nDefense: %d\nDice: %d" % [
@@ -36,7 +41,21 @@ func update_stats_display() -> void:
 	]
 
 func _on_menu_new_game() -> void:
-	print("New Game")
+	_show_character_select()
+
+func _show_character_select() -> void:
+	var dialog := preload("res://character_select_dialog.tscn").instantiate()
+	add_child(dialog)
+	dialog.character_selected.connect(_on_character_selected)
+	dialog.popup()
+
+func _on_character_selected(index: int) -> void:
+	map_area.selected_character_sprite = index + 1
+	map_area.reset_game()
+	var bonuses := ["attack", "speed", "vision", "dice"]
+	map_area.apply_character_starting_bonus(bonuses[index])
+	update_stats_display()
+	update_cards_ui()
 
 func _on_menu_settings() -> void:
 	print("Settings")
@@ -52,6 +71,18 @@ func _on_menu_id_pressed(id: int) -> void:
 			_on_menu_settings()
 		3:
 			_on_menu_about()
+
+func _on_poi_success() -> void:
+	var icon := $SidePanel/VBox/CharacterIcon
+	icon.self_modulate = Color(0, 2.5, 0, 1)
+	await get_tree().create_timer(1.2).timeout
+	icon.self_modulate = Color(1, 1, 1, 1)
+
+func _on_poi_fail() -> void:
+	var icon := $SidePanel/VBox/CharacterIcon
+	icon.self_modulate = Color(2.5, 0, 0, 1)
+	await get_tree().create_timer(0.8).timeout
+	icon.self_modulate = Color(1, 1, 1, 1)
 
 const CARD_COLORS := {
 	0: Color(0, 0.7, 0, 0.85),
@@ -83,6 +114,9 @@ func _on_card_slot_gui_input(event: InputEvent, slot_index: int) -> void:
 		map_area.use_card(slot_index)
 		update_cards_ui()
 		update_stats_display()
+
+func _on_reveal_button_pressed() -> void:
+	map_area.clear_all_fog()
 
 func _on_button_pressed_1() -> void:
 	map_area._on_button_pressed_1()

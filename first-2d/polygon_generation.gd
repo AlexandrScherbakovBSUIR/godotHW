@@ -15,16 +15,20 @@ const GRID_OFFSET_Y := GRID_STEP_Y / 2
 
 var hexagon_grid_positions := PackedVector2Array()
 var hexagon_array := Array()
+var dice_target: Control
 var movement_speed := 2
 var vision_range := 3
 var attack := 2
 var defense := 3
 var dice_count := 1
 var score := 0
+var _current_poi_level := 0
 var path_hexagon_counter := 0
 
 signal stats_changed
 signal cards_changed
+signal poi_success
+signal poi_fail
 var card_slots: Array = []
 
 const CARD_SPEED := 0
@@ -44,8 +48,8 @@ const CARD_LABELS := {
 	CARD_DICE: "D+1",
 	CARD_VISION: "V+1"
 }
-var player_start_pos := 10
 var player_grid_pos := Vector2.ZERO
+var selected_character_sprite := 1
 
 const MENU_HEIGHT := 48
 const RIGHT_PANEL_WIDTH := 320
@@ -53,6 +57,9 @@ const RIGHT_PANEL_WIDTH := 320
 var margin := 50
 
 func _ready() -> void:
+	_init_game()
+
+func _init_game() -> void:
 	var screen_size := get_viewport_rect().size
 	var hex_extent_x := HEX_SIZE + VISUAL_SIZE
 	var hex_extent_y := HEX_HEIGHT / 2.0 + VISUAL_SIZE * SQRT3 / 2.0
@@ -67,14 +74,48 @@ func _ready() -> void:
 	hexagon_grid_positions.sort()
 	for grid_pos in hexagon_grid_positions:
 		hexagon_array.append(create_hexagon(grid_pos))
+	_pick_start_position()
 	generate_rocks()
 	generate_poi()
-	var start_hex := hexagon_array[10] as Hexagon
+	var start_hex := _hexagon_at(player_grid_pos)
 	start_hex.is_player_step_on = true
-	player_grid_pos = hexagon_grid_positions[player_start_pos]
+	start_hex.player_sprite = selected_character_sprite
 	hexagon_selected(player_grid_pos)
 	update_fog(player_grid_pos)
 	_init_cards()
+
+func reset_game() -> void:
+	for hexagon in hexagon_array:
+		var h := hexagon as Hexagon
+		h.queue_free()
+	hexagon_grid_positions = PackedVector2Array()
+	hexagon_array = Array()
+	movement_speed = 2
+	vision_range = 3
+	attack = 2
+	defense = 3
+	dice_count = 1
+	score = 0
+	path_hexagon_counter = 0
+	card_slots = []
+	player_grid_pos = Vector2.ZERO
+	_init_game()
+	stats_changed.emit()
+	cards_changed.emit()
+
+func apply_character_starting_bonus(bonus_type: String) -> void:
+	match bonus_type:
+		"attack":
+			attack += 1
+		"speed":
+			movement_speed += 1
+		"vision":
+			vision_range += 1
+			update_fog(player_grid_pos)
+		"dice":
+			dice_count += 1
+	stats_changed.emit()
+	cards_changed.emit()
 
 func create_hexagon(grid_pos: Vector2) -> Hexagon:
 	var hexagon := HexagonScene.instantiate() as Hexagon
@@ -97,13 +138,16 @@ func hexagon_selected(grid_pos: Vector2) -> void:
 		var h := hexagon as Hexagon
 		if h.grid_pos == grid_pos and h.is_poi:
 			poi_hex = h
-		h.is_player_step_on = h.grid_pos == grid_pos
-		if h.grid_pos != grid_pos:
+		var is_target := h.grid_pos == grid_pos
+		h.is_player_step_on = is_target
+		h.player_sprite = selected_character_sprite if is_target else 0
+		if not is_target:
 			h.is_on_player_pass = false
 
 	if poi_hex != null:
 		poi_hex.is_poi = false
-		_handle_poi_reward()
+		_current_poi_level = poi_hex.poi_level
+		roll_dice()
 
 	player_grid_pos = grid_pos
 	create_path(grid_pos, movement_speed)
@@ -148,22 +192,41 @@ func create_path(start_pos: Vector2, max_steps: int):
 					queue.append(nd)
 
 func generate_rocks() -> void:
-	var start_pos := hexagon_grid_positions[player_start_pos]
 	for hex in hexagon_array:
 		var h := hex as Hexagon
-		if h.grid_pos.distance_to(start_pos) < 200.0:
+		if h.grid_pos.distance_to(player_grid_pos) < 200.0:
 			continue
 		if randf() < 0.15:
 			h.is_rock = true
 
 func generate_poi() -> void:
-	var start_pos := hexagon_grid_positions[player_start_pos]
 	for hex in hexagon_array:
 		var h := hex as Hexagon
-		if h.is_rock or h.grid_pos.distance_to(start_pos) < 200.0:
+		if h.is_rock or h.grid_pos.distance_to(player_grid_pos) < 200.0:
 			continue
 		if randf() < 0.10:
 			h.is_poi = true
+			h.poi_level = randi_range(1, 4)
+
+func _pick_start_position() -> void:
+	var min_x := hexagon_grid_positions[0].x
+	var max_x := hexagon_grid_positions[-1].x
+	var min_y := INF
+	var max_y := -INF
+	for pos in hexagon_grid_positions:
+		if pos.y < min_y: min_y = pos.y
+		if pos.y > max_y: max_y = pos.y
+	var edge_positions := PackedVector2Array()
+	for pos in hexagon_grid_positions:
+		if pos.x == min_x or pos.x == max_x or pos.y == min_y or pos.y == max_y:
+			edge_positions.append(pos)
+	player_grid_pos = edge_positions[randi() % edge_positions.size()]
+
+func _hexagon_at(grid_pos: Vector2) -> Hexagon:
+	var idx := hexagon_grid_positions.find(grid_pos)
+	if idx < 0:
+		return null
+	return hexagon_array[idx] as Hexagon
 
 func roll_dice() -> void:
 	var dice_label := Label.new()
@@ -172,7 +235,10 @@ func roll_dice() -> void:
 	dice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dice_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	dice_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	add_child(dice_label)
+	if dice_target != null:
+		dice_target.add_child(dice_label)
+	else:
+		add_child(dice_label)
 
 	var result := randi_range(1, 6)
 	var tween := create_tween()
@@ -189,8 +255,15 @@ func roll_dice() -> void:
 	tween.tween_callback(_on_dice_done.bind(result))
 
 func _on_dice_done(result: int) -> void:
-	score += result
-	stats_changed.emit()
+	var level := _current_poi_level
+	_current_poi_level = 0
+	if result > level:
+		poi_success.emit()
+		await get_tree().create_timer(1.2).timeout
+		_apply_reward(result)
+	else:
+		poi_fail.emit()
+		await get_tree().create_timer(0.8).timeout
 
 func _has_empty_card_slot() -> bool:
 	for i in card_slots.size():
@@ -198,13 +271,13 @@ func _has_empty_card_slot() -> bool:
 			return true
 	return false
 
-func _handle_poi_reward() -> void:
+func _apply_reward(result: int) -> void:
 	if _has_empty_card_slot() and randi() % 2 == 0:
 		_give_random_card()
-		stats_changed.emit()
-		cards_changed.emit()
 	else:
-		roll_dice()
+		score += result
+	stats_changed.emit()
+	cards_changed.emit()
 
 func _give_random_card() -> void:
 	var types := [CARD_SPEED, CARD_ATTACK, CARD_DICE, CARD_VISION]
@@ -259,6 +332,11 @@ func update_fog(player_grid_pos: Vector2) -> void:
 				if n != Vector2.ZERO and visited.find(n) < 0:
 					queue.append(n)
 					queue.append(nd)
+
+func clear_all_fog() -> void:
+	for hexagon in hexagon_array:
+		var h := hexagon as Hexagon
+		h.is_fogged = false
 
 func _on_button_pressed_1() -> void:
 	movement_speed = randi_range(1, 3)
