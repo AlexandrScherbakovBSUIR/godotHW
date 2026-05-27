@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://cp7t2l4s8g5i6" path="res://polygon_area.tscn" id="1_x786n"]
 [ext_resource type="Texture2D" uid="uid://7vmdp60yiw87" path="res://icon.svg" id="2_evrx2"]
-[ext_resource type="Script" path="res://root.gd" id="3_sxlnw"]
+[ext_resource type="Script" uid="uid://c8hymmdypkbdu" path="res://root.gd" id="3_sxlnw"]
 
 [node name="Node2D" type="Node2D"]
 script = ExtResource("3_sxlnw")
@@ -49,8 +49,8 @@ stretch_mode = 5
 
 [node name="RevealButton" type="Button" parent="SidePanel/VBox"]
 layout_mode = 2
-text = "Reveal"
 size_flags_horizontal = 0
+text = "Reveal"
 
 [node name="StatsLabel" type="Label" parent="SidePanel/VBox"]
 layout_mode = 2
@@ -176,8 +176,6 @@ text = "6"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-
-
 [connection signal="pressed" from="SidePanel/VBox/RevealButton" to="." method="_on_reveal_button_pressed"]
 [connection signal="gui_input" from="SidePanel/VBox/VBoxCards/CardSlot1" to="." method="_on_card_slot_gui_input"]
 [connection signal="gui_input" from="SidePanel/VBox/VBoxCards/CardSlot2" to="." method="_on_card_slot_gui_input"]
@@ -185,4 +183,3 @@ vertical_alignment = 1
 [connection signal="gui_input" from="SidePanel/VBox/VBoxCards/CardSlot4" to="." method="_on_card_slot_gui_input"]
 [connection signal="gui_input" from="SidePanel/VBox/VBoxCards/CardSlot5" to="." method="_on_card_slot_gui_input"]
 [connection signal="gui_input" from="SidePanel/VBox/VBoxCards/CardSlot6" to="." method="_on_card_slot_gui_input"]
-

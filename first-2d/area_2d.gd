@@ -122,6 +122,7 @@ func _setup_ground() -> void:
 	_ground_poly = Polygon2D.new()
 	_ground_poly.polygon = shape
 	_ground_poly.texture = tex
+	_ground_poly.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	_ground_poly.color = Color.WHITE
 	_ground_poly.name = "GroundPoly"
 	_ground_poly.z_index = -1
