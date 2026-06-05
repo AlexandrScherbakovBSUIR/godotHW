@@ -2,12 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://8kb4fecoo1fx"
-valid=false
+uid="uid://5jyl3d8doc1r"
+path="res://.godot/imported/Pro.png-f52e01ed4158648bf3983cdba6cac55a.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
 source_file="res://assets/Heroes/2/Pro.png"
+dest_files=["res://.godot/imported/Pro.png-f52e01ed4158648bf3983cdba6cac55a.ctex"]
 
 [params]
 
