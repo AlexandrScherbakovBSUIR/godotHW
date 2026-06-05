@@ -2,12 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cvi3fytk86184"
-valid=false
+uid="uid://cjongvi1hafua"
+path="res://.godot/imported/Protect.png-63df4d7a42da3a923e790da489e8d7f9.ctex"
+metadata={
+"vram_texture": false
+}
 
 [deps]
 
 source_file="res://assets/Heroes/1/Protect.png"
+dest_files=["res://.godot/imported/Protect.png-63df4d7a42da3a923e790da489e8d7f9.ctex"]
 
 [params]
 
