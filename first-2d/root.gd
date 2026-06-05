@@ -2,6 +2,8 @@ extends Node2D
 
 @onready var map_area := $MapArea
 @onready var stats_label := $SidePanel/VBox/StatsLabel
+@onready var music_player: AudioStreamPlayer = $MusicPlayer
+@onready var sfx_player: AudioStreamPlayer = $SfxPlayer
 @onready var card_slots_ui := [
 	$SidePanel/VBox/VBoxCards/CardSlot1,
 	$SidePanel/VBox/VBoxCards/CardSlot2,
@@ -19,13 +21,22 @@ extends Node2D
 	$SidePanel/VBox/VBoxCards/CardSlot6/Label
 ]
 
+var sfx_pool: Array[AudioStreamPlayer] = []
+var sfx_index := 0
+
 func _ready() -> void:
 	map_area.dice_target = $SidePanel/VBox/CharacterIcon
 	map_area.stats_changed.connect(update_stats_display)
 	map_area.cards_changed.connect(update_cards_ui)
 	map_area.poi_success.connect(_on_poi_success)
 	map_area.poi_fail.connect(_on_poi_fail)
+	map_area.sfx_requested.connect(play_sfx)
 	$MenuBar/MenuButton.get_popup().id_pressed.connect(_on_menu_id_pressed)
+	for i in 8:
+		var s := AudioStreamPlayer.new()
+		s.bus = "Master"
+		add_child(s)
+		sfx_pool.append(s)
 	update_stats_display()
 	update_cards_ui()
 	_show_character_select()
@@ -120,3 +131,31 @@ func _on_reveal_button_pressed() -> void:
 
 func _on_button_pressed_1() -> void:
 	map_area._on_button_pressed_1()
+
+func play_sfx(sfx_name: String) -> void:
+	var path := "res://assets/Audio/SFX/%s.wav" % sfx_name
+	if not ResourceLoader.exists(path):
+		return
+	var stream := load(path) as AudioStream
+	if stream == null:
+		return
+	var player := sfx_pool[sfx_index]
+	player.stream = stream
+	player.play()
+	sfx_index = (sfx_index + 1) % sfx_pool.size()
+
+func play_music(path: String, fade_time: float = 1.0) -> void:
+	if not ResourceLoader.exists(path):
+		return
+	var stream := load(path) as AudioStream
+	if stream == null:
+		return
+	if music_player.playing:
+		var tween := create_tween()
+		tween.tween_property(music_player, "volume_db", -40.0, fade_time / 2)
+		await tween.finished
+	music_player.stream = stream
+	music_player.volume_db = -40.0
+	music_player.play()
+	var tween2 := create_tween()
+	tween2.tween_property(music_player, "volume_db", -10.0, fade_time / 2)

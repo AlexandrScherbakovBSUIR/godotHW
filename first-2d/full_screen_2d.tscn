@@ -7,6 +7,12 @@
 [node name="Node2D" type="Node2D"]
 script = ExtResource("3_sxlnw")
 
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -10.0
+
+[node name="SfxPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = 0.0
+
 [node name="MapArea" parent="." instance=ExtResource("1_x786n")]
 position = Vector2(0, 48)
 

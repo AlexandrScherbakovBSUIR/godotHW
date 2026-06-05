@@ -29,6 +29,7 @@ signal stats_changed
 signal cards_changed
 signal poi_success
 signal poi_fail
+signal sfx_requested
 var card_slots: Array = []
 
 const CARD_SPEED := 0
@@ -148,6 +149,8 @@ func hexagon_selected(grid_pos: Vector2) -> void:
 		poi_hex.is_poi = false
 		_current_poi_level = poi_hex.poi_level
 		roll_dice()
+	else:
+		sfx_requested.emit("step")
 
 	player_grid_pos = grid_pos
 	create_path(grid_pos, movement_speed)
@@ -244,10 +247,11 @@ func roll_dice() -> void:
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_SINE)
 
-	for i in range(12):
+	for i in range(dice_count):
 		var val := randi_range(1, 6)
 		tween.tween_callback(dice_label.set_text.bind(str(val)))
-		tween.tween_interval(0.06 + i * 0.02)
+		tween.tween_callback(sfx_requested.emit.bind("dice_roll"))
+		tween.tween_interval(0.15)
 
 	tween.tween_callback(dice_label.set_text.bind(str(result)))
 	tween.tween_interval(1.0)
@@ -259,10 +263,12 @@ func _on_dice_done(result: int) -> void:
 	_current_poi_level = 0
 	if result > level:
 		poi_success.emit()
+		sfx_requested.emit("poi_success")
 		await get_tree().create_timer(1.2).timeout
 		_apply_reward(result)
 	else:
 		poi_fail.emit()
+		sfx_requested.emit("poi_fail")
 		await get_tree().create_timer(0.8).timeout
 
 func _has_empty_card_slot() -> bool:
