@@ -11,6 +11,17 @@ polygon = PackedVector2Array(16, 16, 112, -8, 120, 112, -8, 120, -8, -8)
 [node name="Polygon2D" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(256, 64, 384, 64, 384, 192, 256, 192)
 
+[node name="PoiLabel" type="Label" parent="."]
+visible = false
+offset_left = -16.0
+offset_top = -20.0
+offset_right = 16.0
+offset_bottom = 20.0
+theme_override_font_sizes/font_size = 28
+text = "?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [connection signal="input_event" from="." to="." method="_on_Hexagon_input_event"]
 [connection signal="mouse_entered" from="." to="." method="_on_Hexagon_mouse_entered"]
 [connection signal="mouse_exited" from="." to="." method="_on_Hexagon_mouse_exited"]

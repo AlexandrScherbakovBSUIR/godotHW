@@ -1,145 +1,372 @@
 extends Node2D
 
 const HexagonScene := preload("res://Hexagon.tscn")
+const HEX_SIZE := 35.0
+const HEX_GAP := 4.0
+const VISUAL_SIZE := HEX_SIZE - HEX_GAP
+const SQRT3 := sqrt(3.0)
+const HEX_HEIGHT := SQRT3 * HEX_SIZE
+const _step_x := int(HEX_SIZE * 3.0)
+const _step_y := int(HEX_HEIGHT)
+const GRID_STEP_X := _step_x + (_step_x % 2)
+const GRID_STEP_Y := _step_y + (_step_y % 2)
+const GRID_OFFSET_X := GRID_STEP_X / 2
+const GRID_OFFSET_Y := GRID_STEP_Y / 2
 
-var hexagon_start_pionts_array  = Array()
-var hexagon_array = Array() # : Array[Hexagon] = Array[Hexagon].new()
-var mpovement_speed : int = 3
-var path_hexagon_counter : int = 0
-var player_start_pos :int = 10
+var hexagon_grid_positions := PackedVector2Array()
+var hexagon_array := Array()
+var dice_target: Control
+var movement_speed := 2
+var vision_range := 3
+var attack := 2
+var defense := 3
+var dice_count := 1
+var score := 0
+var _current_poi_level := 0
+var path_hexagon_counter := 0
 
-var checked_vectors : PackedVector2Array
-func _init() -> void:
-	print("init")
-	for x in range(50,1300,120): # TODO: make variables not hardcode and use matrix - not a just array 
-		for y in range(50,900,70):
-			var point = Vector2(x, y)
-			hexagon_start_pionts_array.append(point)
-			var point2 = Vector2(x + 60, y + 35)
-			hexagon_start_pionts_array.append(point2)
-	#print("points array size: ", hexagon_start_pionts_array.size())
-	#print("points array_______________________________________________________________: "
-	#, hexagon_start_pionts_array)
-	
-	hexagon_start_pionts_array.sort()
-	print("points array____________________after sort___________________________________________: "
-	, hexagon_start_pionts_array)
-	
+signal stats_changed
+signal cards_changed
+signal poi_success
+signal poi_fail
+signal sfx_requested
+var card_slots: Array = []
+
+const CARD_SPEED := 0
+const CARD_ATTACK := 1
+const CARD_DICE := 2
+const CARD_VISION := 3
+
+const CARD_COLORS := {
+	CARD_SPEED: Color(0, 0.7, 0, 0.85),
+	CARD_ATTACK: Color(0.8, 0, 0, 0.85),
+	CARD_DICE: Color(0, 0.35, 0.85, 0.85),
+	CARD_VISION: Color(0.5, 0, 0.6, 0.85)
+}
+const CARD_LABELS := {
+	CARD_SPEED: "S+1",
+	CARD_ATTACK: "A+1",
+	CARD_DICE: "D+1",
+	CARD_VISION: "V+1"
+}
+var player_grid_pos := Vector2.ZERO
+var selected_character_sprite := 1
+
+const MENU_HEIGHT := 48
+const RIGHT_PANEL_WIDTH := 320
+
+var margin := 50
+
 func _ready() -> void:
-	print("ready")
-	for point in hexagon_start_pionts_array:
-		hexagon_array.append(create_hexagon(point))  
-	var start_hex : Hexagon = hexagon_array.get(10)
-	start_hex.is_payer_step_on = true
-	hexagon_selected(hexagon_start_pionts_array.get(player_start_pos)) 
-	print("count of generated hexagons: ",hexagon_array.size())
+	_init_game()
 
-#func _process(delta: float) -> void:
-	#for hexagon in hexagon_array:
-		#if hexagon.is_payer_step_on:
-			#var value = 1
-		#var vvalue = 2
-	#var mouse_point = get_local_mouse_position()
-	#print(mouse_point)
- 
+func _init_game() -> void:
+	var screen_size := get_viewport_rect().size
+	var hex_extent_x := HEX_SIZE + VISUAL_SIZE
+	var hex_extent_y := HEX_HEIGHT / 2.0 + VISUAL_SIZE * SQRT3 / 2.0
+	var right_margin := RIGHT_PANEL_WIDTH + margin
+	var top_offset := MENU_HEIGHT + margin
+	var end_x := int(screen_size.x - right_margin - GRID_OFFSET_X - hex_extent_x)
+	var end_y := int(screen_size.y - top_offset - global_position.y - GRID_OFFSET_Y - hex_extent_y)
+	for x in range(margin, end_x, GRID_STEP_X):
+		for y in range(margin, end_y, GRID_STEP_Y):
+			hexagon_grid_positions.append(Vector2(x, y))
+			hexagon_grid_positions.append(Vector2(x + GRID_OFFSET_X, y + GRID_OFFSET_Y))
+	hexagon_grid_positions.sort()
+	for grid_pos in hexagon_grid_positions:
+		hexagon_array.append(create_hexagon(grid_pos))
+	_pick_start_position()
+	generate_rocks()
+	generate_poi()
+	var start_hex := _hexagon_at(player_grid_pos)
+	start_hex.is_player_step_on = true
+	start_hex.player_sprite = selected_character_sprite
+	hexagon_selected(player_grid_pos)
+	update_fog(player_grid_pos)
+	_init_cards()
 
-func create_hexagon(point):
-	var start_point = point
-	#print("point: ",point)
-	var hexagon : Hexagon = HexagonScene.instantiate()
+func reset_game() -> void:
+	for hexagon in hexagon_array:
+		var h := hexagon as Hexagon
+		h.queue_free()
+	hexagon_grid_positions = PackedVector2Array()
+	hexagon_array = Array()
+	movement_speed = 2
+	vision_range = 3
+	attack = 2
+	defense = 3
+	dice_count = 1
+	score = 0
+	path_hexagon_counter = 0
+	card_slots = []
+	player_grid_pos = Vector2.ZERO
+	_init_game()
+	stats_changed.emit()
+	cards_changed.emit()
+
+func apply_character_starting_bonus(bonus_type: String) -> void:
+	match bonus_type:
+		"attack":
+			attack += 1
+		"speed":
+			movement_speed += 1
+		"vision":
+			vision_range += 1
+			update_fog(player_grid_pos)
+		"dice":
+			dice_count += 1
+	stats_changed.emit()
+	cards_changed.emit()
+
+func create_hexagon(grid_pos: Vector2) -> Hexagon:
+	var hexagon := HexagonScene.instantiate() as Hexagon
 	add_child(hexagon)
 
-	hexagon.set_shape(PackedVector2Array([
-		start_point,
-		Vector2(start_point[0] + 30,start_point[1] + 0),
-		Vector2(start_point[0] + 50,start_point[1] + 30),
-		Vector2(start_point[0] + 30,start_point[1] + 60),
-		Vector2(start_point[0] +  0,start_point[1] + 60),
-		Vector2(start_point[0] - 20,start_point[1] + 30),
-		]))
-	hexagon.set_indexed("str",start_point)
-	hexagon.set_neibghours(start_point)
-	hexagon.set_script(load("res://area_2d.gd"))
-	hexagon.region_selected.connect(hexagon_selected.bind(start_point))
-	#hexagon.mouse_entered.connect(_on_Hexagon_mouse_entered)
-	#hexagon.connect(_on_MapRegion_mouse_entered)
-	#add_child(hexagon)
-	#hexagon.set_script("res://polygon_2d_mouse_listener.gd")
-	#print("create a hexagon: " , area," script: ", area.get_script())
+	var center := Vector2(grid_pos.x + HEX_SIZE, grid_pos.y + HEX_HEIGHT / 2.0)
+	var shape := PackedVector2Array()
+	for i in range(6):
+		var angle := deg_to_rad(60.0 * i + 240.0)
+		shape.append(center + VISUAL_SIZE * Vector2(cos(angle), sin(angle)))
+	hexagon.set_shape(shape)
+	hexagon.grid_pos = grid_pos
+	hexagon.set_neighbours(grid_pos)
+	hexagon.region_selected.connect(hexagon_selected.bind(grid_pos))
 	return hexagon
-	
-#func change_hexagon_color(hexagon):
-	#hexagon.set_color("BRAUN")
-#
-#func find_hexagon(point):
-	#var hexagon_start_point
-	#
-	#
-	#return hexagon_start_point
-	
-func hexagon_selected(position : Vector2) -> void:
-	print("hexagon_selected")
-	print("position: " , position)
-	#hexagon_array.find_custom(hexagon.shape[0])
-	var hexagon_position = 0
+
+func hexagon_selected(grid_pos: Vector2) -> void:
+	var poi_hex: Hexagon = null
 	for hexagon in hexagon_array:
-		if hexagon.shape[0] == position:
-			hexagon_position = hexagon_array.find(hexagon)
-			
-			#print(vect)
-		else:
-			hexagon.is_payer_step_on = false
-			hexagon.is_on_player_pass = false
-			
-	checked_vectors.clear()
-	print("start find path: ", position, " ", mpovement_speed)
-	create_path(position,mpovement_speed)
-	print("++++++++++++++++++++++++++++++++++++++++++")
-	print("counter", ": ", path_hexagon_counter)
-	print("++++++++++++++++++++++++++++++++++++++++++")
+		var h := hexagon as Hexagon
+		if h.grid_pos == grid_pos and h.is_poi:
+			poi_hex = h
+		var is_target := h.grid_pos == grid_pos
+		h.is_player_step_on = is_target
+		h.player_sprite = selected_character_sprite if is_target else 0
+		if not is_target:
+			h.is_on_player_pass = false
+
+	if poi_hex != null:
+		poi_hex.is_poi = false
+		_current_poi_level = poi_hex.poi_level
+		roll_dice()
+	else:
+		sfx_requested.emit("step")
+
+	player_grid_pos = grid_pos
+	create_path(grid_pos, movement_speed)
+	update_fog(grid_pos)
 	path_hexagon_counter = 0
 
+func create_path(start_pos: Vector2, max_steps: int):
+	var visited := PackedVector2Array()
+	var queue := []
+	queue.append(start_pos)
+	queue.append(0)
 
+	var front := 0
+	while front < queue.size():
+		var pos := queue[front] as Vector2
+		var dist := queue[front + 1] as int
+		front += 2
 
+		if visited.find(pos) >= 0:
+			continue
+		visited.append(pos)
 
-func make_hexagon_on_player_path(hexagon : Hexagon) -> void:
-	hexagon.is_on_player_pass = true
-	
-func create_path(vect : Vector2, ms : int):
-#	TODO: to reduse calls of recurcive method add parameter to list already processed VECTORS
-	#checked_vectors.append(vect)
-	path_hexagon_counter = path_hexagon_counter +1
-	#print("create_path")
-	#print("vect: ", vect)
-	var position = hexagon_start_pionts_array.find(vect,0)
-	#print("position: " , position)
-	var hexagon = hexagon_array.get(position)
-	if !hexagon.is_payer_step_on:
-		hexagon.is_on_player_pass = true
-		#print(hexagon.is_on_player_pass, hexagon.shape[0])
-	if ms >0:
-		#print(position, " ", ms)
-		ms = ms -1
-		if hexagon.neighbour_1 != Vector2(0,0):# && checked_vectors.find(hexagon.neighbour_1) < 0:
-			create_path(hexagon.neighbour_1,ms)
-		if hexagon.neighbour_2 != Vector2(0,0):# && checked_vectors.find(hexagon.neighbour_2) < 0:
-			create_path(hexagon.neighbour_2,ms)
-		if hexagon.neighbour_3 != Vector2(0,0):# && checked_vectors.find(hexagon.neighbour_3) < 0:
-			create_path(hexagon.neighbour_3,ms)
-		if hexagon.neighbour_4 != Vector2(0,0):# && checked_vectors.find(hexagon.neighbour_4) < 0:
-			create_path(hexagon.neighbour_4,ms)
-		if hexagon.neighbour_5 != Vector2(0,0):# && checked_vectors.find(hexagon.neighbour_5) < 0:
-			create_path(hexagon.neighbour_5,ms)
-		if hexagon.neighbour_6 != Vector2(0,0):# && checked_vectors.find(hexagon.neighbour_6) < 0:
-			create_path(hexagon.neighbour_6,ms)
-	
-func correct_position(position : int) -> int:
-	if  position < 0:
-		return 0
-	if position > hexagon_start_pionts_array.size()-1:
-		return hexagon_start_pionts_array.size() -1
-	return position
+		var idx := hexagon_grid_positions.find(pos)
+		if idx < 0:
+			continue
 
+		var hexagon := hexagon_array[idx] as Hexagon
+		path_hexagon_counter += 1
+
+		if hexagon.is_rock:
+			continue
+
+		if not hexagon.is_player_step_on:
+			hexagon.is_on_player_pass = true
+
+		if dist < max_steps:
+			var nd := dist + 1
+			for n in [hexagon.neighbour_1, hexagon.neighbour_2, hexagon.neighbour_3,
+					  hexagon.neighbour_4, hexagon.neighbour_5, hexagon.neighbour_6]:
+				if n != Vector2.ZERO and visited.find(n) < 0:
+					queue.append(n)
+					queue.append(nd)
+
+func generate_rocks() -> void:
+	for hex in hexagon_array:
+		var h := hex as Hexagon
+		if h.grid_pos.distance_to(player_grid_pos) < 200.0:
+			continue
+		if randf() < 0.15:
+			h.is_rock = true
+
+func generate_poi() -> void:
+	for hex in hexagon_array:
+		var h := hex as Hexagon
+		if h.is_rock or h.grid_pos.distance_to(player_grid_pos) < 200.0:
+			continue
+		if randf() < 0.10:
+			h.is_poi = true
+			h.poi_level = randi_range(1, 4)
+
+func _pick_start_position() -> void:
+	var min_x := hexagon_grid_positions[0].x
+	var max_x := hexagon_grid_positions[-1].x
+	var min_y := INF
+	var max_y := -INF
+	for pos in hexagon_grid_positions:
+		if pos.y < min_y: min_y = pos.y
+		if pos.y > max_y: max_y = pos.y
+	var edge_positions := PackedVector2Array()
+	for pos in hexagon_grid_positions:
+		if pos.x == min_x or pos.x == max_x or pos.y == min_y or pos.y == max_y:
+			edge_positions.append(pos)
+	player_grid_pos = edge_positions[randi() % edge_positions.size()]
+
+func _hexagon_at(grid_pos: Vector2) -> Hexagon:
+	var idx := hexagon_grid_positions.find(grid_pos)
+	if idx < 0:
+		return null
+	return hexagon_array[idx] as Hexagon
+
+func roll_dice() -> void:
+	var dice_label := Label.new()
+	dice_label.text = "?"
+	dice_label.add_theme_font_size_override("font_size", 72)
+	dice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	dice_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	dice_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	if dice_target != null:
+		dice_target.add_child(dice_label)
+	else:
+		add_child(dice_label)
+
+	var result := randi_range(1, 6)
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_SINE)
+
+	for i in range(dice_count):
+		var val := randi_range(1, 6)
+		tween.tween_callback(dice_label.set_text.bind(str(val)))
+		tween.tween_callback(sfx_requested.emit.bind("dice_roll"))
+		tween.tween_interval(0.15)
+
+	tween.tween_callback(dice_label.set_text.bind(str(result)))
+	tween.tween_interval(1.0)
+	tween.tween_callback(dice_label.queue_free)
+	tween.tween_callback(_on_dice_done.bind(result))
+
+func _on_dice_done(result: int) -> void:
+	var level := _current_poi_level
+	_current_poi_level = 0
+	if result > level:
+		poi_success.emit()
+		sfx_requested.emit("poi_success")
+		await get_tree().create_timer(1.2).timeout
+		_apply_reward(result)
+	else:
+		poi_fail.emit()
+		sfx_requested.emit("poi_fail")
+		await get_tree().create_timer(0.8).timeout
+
+func _has_empty_card_slot() -> bool:
+	for i in card_slots.size():
+		if card_slots[i] == null:
+			return true
+	return false
+
+func _apply_reward(result: int) -> void:
+	if _has_empty_card_slot() and randi() % 2 == 0:
+		_give_random_card()
+	else:
+		score += result
+	stats_changed.emit()
+	cards_changed.emit()
+
+func _give_random_card() -> void:
+	var types := [CARD_SPEED, CARD_ATTACK, CARD_DICE, CARD_VISION]
+	var card = types[randi() % types.size()]
+	for i in card_slots.size():
+		if card_slots[i] == null:
+			card_slots[i] = card
+			match card:
+				CARD_SPEED:
+					movement_speed += 1
+				CARD_ATTACK:
+					attack += 1
+				CARD_DICE:
+					dice_count += 1
+				CARD_VISION:
+					vision_range += 1
+			if card == CARD_VISION:
+				update_fog(player_grid_pos)
+			return
+
+func update_fog(player_grid_pos: Vector2) -> void:
+	for hexagon in hexagon_array:
+		var h := hexagon as Hexagon
+		h.is_fogged = true
+
+	var visited := PackedVector2Array()
+	var queue := []
+	queue.append(player_grid_pos)
+	queue.append(0)
+
+	var front := 0
+	while front < queue.size():
+		var pos := queue[front] as Vector2
+		var dist := queue[front + 1] as int
+		front += 2
+
+		if visited.find(pos) >= 0:
+			continue
+		visited.append(pos)
+
+		var idx := hexagon_grid_positions.find(pos)
+		if idx < 0:
+			continue
+
+		var hexagon := hexagon_array[idx] as Hexagon
+		hexagon.is_fogged = false
+
+		if dist < vision_range:
+			var nd := dist + 1
+			for n in [hexagon.neighbour_1, hexagon.neighbour_2, hexagon.neighbour_3,
+					  hexagon.neighbour_4, hexagon.neighbour_5, hexagon.neighbour_6]:
+				if n != Vector2.ZERO and visited.find(n) < 0:
+					queue.append(n)
+					queue.append(nd)
+
+func clear_all_fog() -> void:
+	for hexagon in hexagon_array:
+		var h := hexagon as Hexagon
+		h.is_fogged = false
 
 func _on_button_pressed_1() -> void:
-	mpovement_speed = randi_range(1,3)
+	movement_speed = randi_range(1, 3)
+
+func _init_cards() -> void:
+	card_slots.resize(6)
+
+func use_card(slot_index: int) -> void:
+	if slot_index < 0 or slot_index >= card_slots.size():
+		return
+	var card = card_slots[slot_index]
+	if card == null:
+		return
+
+	match card:
+		CARD_SPEED:
+			movement_speed += 1
+		CARD_ATTACK:
+			attack += 1
+		CARD_DICE:
+			dice_count += 1
+		CARD_VISION:
+			vision_range += 1
+
+	card_slots[slot_index] = null
+	if card == CARD_VISION:
+		update_fog(player_grid_pos)
